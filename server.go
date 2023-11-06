@@ -1235,7 +1235,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 	// Wrap the DeleteChannelEdges method so that the funding manager can
 	// use it without depending on several layers of indirection.
 	deleteAliasEdge := func(scid lnwire.ShortChannelID) (
-		*models.ChannelEdgePolicy1, error) {
+		models.ChannelEdgePolicy, error) {
 
 		info, e1, e2, err := s.graphDB.FetchChannelEdgesByID(
 			scid.ToUint64(),
@@ -1254,7 +1254,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		var ourKey [33]byte
 		copy(ourKey[:], nodeKeyDesc.PubKey.SerializeCompressed())
 
-		var ourPolicy *models.ChannelEdgePolicy1
+		var ourPolicy models.ChannelEdgePolicy
 		if info != nil && info.Node1Bytes() == ourKey {
 			ourPolicy = e1
 		} else {
@@ -1269,6 +1269,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		err = s.graphDB.DeleteChannelEdges(
 			false, false, scid.ToUint64(),
 		)
+
 		return ourPolicy, err
 	}
 
@@ -3056,7 +3057,7 @@ func (s *server) establishPersistentConnections() error {
 	err = s.graphDB.ForEachNodeChannel(nil, sourceNode.PubKeyBytes, func(
 		tx kvdb.RTx,
 		chanInfo models.ChannelEdgeInfo,
-		policy, _ *models.ChannelEdgePolicy1) error {
+		policy, _ models.ChannelEdgePolicy) error {
 
 		chanPoint := chanInfo.GetChanPoint()
 
